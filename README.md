@@ -33,7 +33,6 @@ This project is an embedded weather station system based on an ESP32 microcontro
 
 *   **Language:** C++
 *   **Framework:** Arduino / PlatformIO
-*(Note: A task configuration for the Zed editor is natively included in this repository)*
 
 **Recommended `platformio.ini` file:**
 ```ini
