@@ -1,6 +1,6 @@
 # Station Météo Embarquée - ESP32
 
-![Photo du montage](img/)
+![Photo du montage](montage.jpg)
 
 Ce projet est un système embarqué de station météorologique basé sur un microcontrôleur ESP32. Il collecte en temps réel des données (température, humidité, pression atmosphérique, luminosité) via divers capteurs et les restitue sur un écran LCD via le bus I2C ainsi que sur le moniteur série.
 
@@ -27,4 +27,19 @@ Ce projet est un système embarqué de station météorologique basé sur un mic
     *   **$R_0$** : Résistance nominale de la thermistance à la température de référence (10 000 Ω).
 *   **Gestion des erreurs :** Vérification de l'initialisation des capteurs au démarrage (`setup`) pour éviter les crashs matériels ainsi que les plantages du programme.
 
-## 💻 Environnement
+## 💻 Environnement de Développement
+
+*   **Langage :** C++
+*   **Framework :** Arduino / PlatformIO
+
+**Fichier `platformio.ini` recommandé :**
+```ini
+[env:esp32dev]
+platform = espressif32
+board = esp32dev
+framework = arduino
+monitor_speed = 115200
+lib_deps =
+  adafruit/Adafruit BMP280 Library @ ^2.6.8
+  adafruit/Adafruit HTU21DF Library @ ^1.1.2
+  marcoschwartz/LiquidCrystal_I2C @ ^1.1.4
