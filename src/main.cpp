@@ -20,7 +20,7 @@ void setup(){
     Serial.begin(115200);
     delay(1000); // Petit délai pour laisser le temps au port Série de s'ouvrir
 
-    // Sécurités indispensables pour éviter le crash (LoadProhibited)
+    // Indispensables pour éviter le crash
     if (!htu.begin()) {
         Serial.println("Erreur : capteur HTU21D (GY-21) non detecte !");
     }
@@ -33,14 +33,14 @@ void setup(){
 }
 
 void loop (){
-    // --- 1. LUMINOSITÉ (LDR) ---
+    // --- LUMINOSITÉ (LDR) ---
     int LDR = analogRead(LDR_Pin);
     float LDR_Pourcent = (LDR / 4095.0F) * 100.0F;
 
     Serial.print(LDR_Pourcent);
     Serial.println("% de luminosite");
 
-    // --- 2. TEMPÉRATURE AMBIANTE (Thermistor CTN) ---
+    // --- TEMPÉRATURE AMBIANTE (Thermistor CTN) ---
     int THR = analogRead(THR_Pin);
 
     // Sécurité pour la thermistance
@@ -57,18 +57,18 @@ void loop (){
     Serial.print(tempCelsius);
     Serial.println(" C");
 
-    // --- 3. HUMIDITÉ (HTU21D) ---
+    // --- HUMIDITÉ (HTU21D) ---
     float GY_hum = htu.readHumidity();
     Serial.print(GY_hum);
     Serial.println("% d'humidite");
 
-    // --- 4. PRESSION (BMP280) ---
+    // --- PRESSION (BMP280) ---
     float pressionPa = (bmp.readPressure() / 100.0F);
     Serial.print(pressionPa);
     Serial.println(" hPa");
     Serial.println("-------------------------");
 
-    // --- 5. AFFICHAGE ÉCRAN LCD ---
+    // --- AFFICHAGE ÉCRAN LCD ---
     lcd.clear();
 
     // Ligne 0 : Luminosité et Température
@@ -80,7 +80,7 @@ void loop (){
     lcd.setCursor(8, 0);
     lcd.print("T:");
     lcd.print(tempCelsius, 1); // 1 seule décimale
-    lcd.print("C"); // Pas de symbole ° pour éviter le bug d'affichage
+    lcd.print("C");
 
     // Ligne 1 : Humidité et Pression
     lcd.setCursor(0, 1);
