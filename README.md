@@ -27,7 +27,7 @@ This project is an embedded weather station system based on an ESP32 microcontro
     *   **$\beta$**: Thermal constant of the sensor (3950).
     *   **$R$**: Current resistance read by the ESP32 (in Ω).
     *   **$R_0$**: Nominal resistance of the thermistor at the reference temperature (10,000 Ω).
-*   **Error Management:** Sensor initialization check at startup (`setup`) to prevent hardware crashes and program stalls (LoadProhibited panics).
+*   **Error Management:** Sensor initialization check at startup (`setup`) to prevent hardware crashes and program stalls.
 
 ## 💻 Development Environment
 
