@@ -1,6 +1,6 @@
 # Station Météo Embarquée - ESP32
 
-![Photo du montage](montage.jpg)
+![Photo du montage](img/)
 
 Ce projet est un système embarqué de station météorologique basé sur un microcontrôleur ESP32. Il collecte en temps réel des données (température, humidité, pression atmosphérique, luminosité) via divers capteurs et les restitue sur un écran LCD via le bus I2C ainsi que sur le moniteur série.
 
