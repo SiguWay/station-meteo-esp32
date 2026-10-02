@@ -2,11 +2,11 @@
 
 ![Photo du montage](img/)
 
-Ce projet est un système embarqué de station météorologique basé sur un microcontrôleur ESP32. Il collecte en temps réel des données environnementales (température, humidité, pression atmosphérique, luminosité) via divers capteurs et les restitue sur un écran LCD via le bus I2C ainsi que sur le moniteur série.
+Ce projet est un système embarqué de station météorologique basé sur un microcontrôleur ESP32. Il collecte en temps réel des données (température, humidité, pression atmosphérique, luminosité) via divers capteurs et les restitue sur un écran LCD via le bus I2C ainsi que sur le moniteur série.
 
 ## 🛠 Matériel Utilisé
 
-*   **Microcontrôleur :** ESP32 (NodeMCU)
+*   **Microcontrôleur :** ESP32
 *   **Capteur de Pression :** BMP280 (Interface I2C - Adresse `0x76`) - *Alimentation 3.3V*
 *   **Capteur d'Humidité/Température :** HTU21DF / GY-21 (Interface I2C) - *Alimentation 3.3V*
 *   **Affichage :** Écran LCD 1602 avec module I2C (Adresse `0x27`) - *Alimentation 5V (VIN/VBUS)*
@@ -18,7 +18,7 @@ Ce projet est un système embarqué de station météorologique basé sur un mic
 *   **Acquisition Analogique (ADC) :** Lecture et conversion des valeurs brutes de la LDR et de la thermistance avec protection contre les circuits ouverts/courts-circuits (prévention des divisions par zéro).
 *   **Communication I2C :** Mutualisation du bus I2C (Broches 21 SDA, 22 SCL) pour l'écran LCD, le BMP280 et le HTU21DF.
 *   **Traitement des données :** Application de l'équation de Steinhart-Hart simplifiée (paramètre Beta) pour la conversion de la résistance de la CTN en degrés Celsius.
-*   **Gestion des erreurs :** Vérification de l'initialisation des capteurs au démarrage (`setup`) pour éviter les crashs matériels (LoadProhibited).
+*   **Gestion des erreurs :** Vérification de l'initialisation des capteurs au démarrage (`setup`) pour éviter les crashs matériels ainsi que les plantages du programme.
 
 ## 💻 Environnement de Développement
 
