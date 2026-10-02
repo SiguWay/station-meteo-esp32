@@ -1,38 +1,41 @@
-# Station Météo Embarquée - ESP32
+*🌍 [Lire en français](README_fr.md)*
 
-![Photo du montage](img/)
+# Embedded Weather Station - ESP32
 
-Ce projet est un système embarqué de station météorologique basé sur un microcontrôleur ESP32. Il collecte en temps réel des données (température, humidité, pression atmosphérique, luminosité) via divers capteurs et les restitue sur un écran LCD via le bus I2C ainsi que sur le moniteur série.
+![Hardware Setup Photo](img/)
 
-## 🛠 Matériel Utilisé
+This project is an embedded weather station system based on an ESP32 microcontroller. It collects real-time environmental data (temperature, humidity, atmospheric pressure, luminosity) via various sensors and displays it on a 1602 LCD screen via the I2C bus, as well as on the serial monitor.
 
-*   **Microcontrôleur :** ESP32
-*   **Capteur de Pression :** BMP280 (Interface I2C - Adresse `0x76`) - *Alimentation 3.3V*
-*   **Capteur d'Humidité/Température :** HTU21DF / GY-21 (Interface I2C) - *Alimentation 3.3V*
-*   **Affichage :** Écran LCD 1602 avec module I2C (Adresse `0x27`) - *Alimentation 5V (VIN/VBUS)*
-*   **Capteur de Luminosité :** LDR (Photorésistance) connectée sur broche analogique avec pont diviseur (résistance 10kΩ)
-*   **Capteur de Température Ambiante :** Thermistance CTN (BETA = 3950.0) connectée sur broche analogique avec pont diviseur (résistance 10kΩ)
+## 🛠 Hardware Used
 
-## ⚙️ Fonctionnalités Techniques
+*   **Microcontroller:** ESP32
+*   **Pressure Sensor:** BMP280 (I2C Interface - Address `0x76`) - *3.3V Power Supply*
+*   **Humidity/Temperature Sensor:** HTU21DF / GY-21 (I2C Interface) - *3.3V Power Supply*
+*   **Display:** 1602 LCD Screen with I2C module (Address `0x27`) - *5V Power Supply (VIN/VBUS)*
+*   **Luminosity Sensor:** LDR (Photoresistor) connected to an analog pin with a voltage divider (10kΩ resistor)
+*   **Ambient Temperature Sensor:** NTC Thermistor (BETA = 3950.0) connected to an analog pin with a voltage divider (10kΩ resistor)
 
-*   **Acquisition Analogique (ADC) :** Lecture et conversion des valeurs brutes de la LDR et de la thermistance avec protection contre les circuits ouverts/courts-circuits (prévention des divisions par zéro).
-*   **Communication I2C :** Mutualisation du bus I2C (Broches 21 SDA, 22 SCL) pour l'écran LCD, le BMP280 et le HTU21DF.
-*   **Traitement des données :** Application de l'équation de Steinhart-Hart simplifiée (paramètre Beta) pour la conversion de la résistance de la CTN en degrés Celsius :
+## ⚙️ Technical Features
+
+*   **Analog Acquisition (ADC):** Reading and converting raw values from the LDR and thermistor, including protection against open/short circuits (preventing division by zero).
+*   **I2C Communication:** I2C bus sharing (Pins 21 SDA, 22 SCL) to seamlessly manage the LCD screen, BMP280, and HTU21DF on the same data line.
+*   **Data Processing:** Application of the simplified Steinhart-Hart equation (Beta parameter) to convert the NTC resistance into degrees Celsius:
     $$\frac{1}{T} = \frac{1}{T_0} + \frac{1}{\beta} \ln \left( \frac{R}{R_0} \right)$$
-    *Où :*
-    *   **$T$** : Température mesurée (en Kelvin, puis convertie en Celsius).
-    *   **$T_0$** : Température de référence de la pièce (298.15 K, soit 25°C).
-    *   **$\beta$** : Constante thermique du capteur (ici 3950).
-    *   **$R$** : Résistance actuelle lue par l'ESP32 (en Ω).
-    *   **$R_0$** : Résistance nominale de la thermistance à la température de référence (10 000 Ω).
-*   **Gestion des erreurs :** Vérification de l'initialisation des capteurs au démarrage (`setup`) pour éviter les crashs matériels ainsi que les plantages du programme.
+    *Where:*
+    *   **$T$**: Measured temperature (in Kelvin, then converted to Celsius).
+    *   **$T_0$**: Reference room temperature (298.15 K, or 25°C).
+    *   **$\beta$**: Thermal constant of the sensor (3950).
+    *   **$R$**: Current resistance read by the ESP32 (in Ω).
+    *   **$R_0$**: Nominal resistance of the thermistor at the reference temperature (10,000 Ω).
+*   **Error Management:** Sensor initialization check at startup (`setup`) to prevent hardware crashes and program stalls (LoadProhibited panics).
 
-## 💻 Environnement de Développement
+## 💻 Development Environment
 
-*   **Langage :** C++
-*   **Framework :** Arduino / PlatformIO
+*   **Language:** C++
+*   **Framework:** Arduino / PlatformIO
+*(Note: A task configuration for the Zed editor is natively included in this repository)*
 
-**Fichier `platformio.ini` recommandé :**
+**Recommended `platformio.ini` file:**
 ```ini
 [env:esp32dev]
 platform = espressif32
