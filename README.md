@@ -17,7 +17,8 @@ Ce projet est un système embarqué de station météorologique basé sur un mic
 
 *   **Acquisition Analogique (ADC) :** Lecture et conversion des valeurs brutes de la LDR et de la thermistance avec protection contre les circuits ouverts/courts-circuits (prévention des divisions par zéro).
 *   **Communication I2C :** Mutualisation du bus I2C (Broches 21 SDA, 22 SCL) pour l'écran LCD, le BMP280 et le HTU21DF.
-*   **Traitement des données :** Application de l'équation de Steinhart-Hart simplifiée (paramètre Beta) pour la conversion de la résistance de la CTN en degrés Celsius.
+*   **Traitement des données :** Application de l'équation de Steinhart-Hart simplifiée (paramètre Beta) pour la conversion de la résistance de la CTN en degrés Celsius :
+    $$ \frac{1}{T} = \frac{1}{T_0} + \frac{1}{\beta} \ln \left( \frac{R}{R_0} \right) $$
 *   **Gestion des erreurs :** Vérification de l'initialisation des capteurs au démarrage (`setup`) pour éviter les crashs matériels ainsi que les plantages du programme.
 
 ## 💻 Environnement de Développement
