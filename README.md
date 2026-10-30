@@ -1,5 +1,3 @@
-# 1. Écrire le README.md en anglais
-Set-Content -Path "README.md" -Value @"
 *🌍 [Lire en français](README_fr.md)*
 
 # Embedded Weather Station - ESP32 (Web Interface & API)
