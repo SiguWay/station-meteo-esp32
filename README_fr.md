@@ -1,5 +1,3 @@
-# 1. Mettre à jour README_fr.md
-@'
 *🌍 [Read this in English](README.md)*
 
 # Station Météo Embarquée - ESP32 (Interface Web & API)
