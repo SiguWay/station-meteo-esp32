@@ -9,15 +9,24 @@
 #include <WiFi.h>
 #include <ESPAsyncWebServer.h>
 
-const char* ssid = "your_ssid_wifi";
-const char* password = "your_password";
+// FreeRTOS Mutex handle for thread safety
+SemaphoreHandle_t xStationMutex = NULL;
 
+// Network credentials
+const char* ssid = "your_ssid_wifi";
+const char* password = "your_password_wifi";
+
+// Asynchronous Web Server on port 80
 AsyncWebServer server(80);
 
+// Hardware instances
 Adafruit_HTU21DF htu;
 Adafruit_BMP280 bmp;
 LiquidCrystal_I2C lcd(0x27, 16, 2);
 
+// ==========================================
+// --- BASE SENSOR CLASS (OOP POLYMORPHISM) ---
+// ==========================================
 class Sensor {
 protected:
     String id, unit, sensor_type;
@@ -33,11 +42,12 @@ public:
         return Final_Value;
     }
 
-    String get_unit() const{
+    String get_unit() const {
         return unit;
     }
 };
 
+// --- NTC THERMISTOR SENSOR ---
 class Temp_Sensor : public Sensor {
 private:
     int THR_pin;
@@ -51,11 +61,13 @@ public:
     void add_measurement() override {
         int THR = analogRead(THR_pin);
 
+        // Safety check for thermistor reading
         if (THR == 0 || THR >= 4095) {
             Serial.println("Error reading THR (open circuit or short-circuit)");
             return;
         }
 
+        // Steinhart-Hart B-parameter calculation
         float THR_Resistance = 10000.0f * (4095.0f - (float)THR) / (float)THR;
         float tempKelvin = 1.0f / ((1.0f / 298.15f) + (1.0f / BETA) * logf(THR_Resistance / 10000.0f));
         float tempCelsius = tempKelvin - 273.15f;
@@ -63,6 +75,7 @@ public:
     }
 };
 
+// --- PHOTORESISTOR (LDR) SENSOR ---
 class Luminosity_Sensor : public Sensor {
 private:
     int LDR_pin;
@@ -79,6 +92,7 @@ public:
     }
 };
 
+// --- HTU21D HUMIDITY SENSOR ---
 class Humidity_Sensor : public Sensor {
 private:
     Adafruit_HTU21DF* htu;
@@ -94,6 +108,7 @@ public:
     }
 };
 
+// --- BMP280 PRESSURE SENSOR ---
 class Pressure_Sensor : public Sensor {
 private:
     Adafruit_BMP280* bmp;
@@ -104,12 +119,15 @@ public:
 
     void add_measurement() override {
         if (bmp != nullptr) {
-            Final_Value = bmp->readPressure() / 100.0f;
+            Final_Value = bmp->readPressure() / 100.0f; // Convert Pa to hPa
         }
     }
 };
 
-class Station{
+// ==========================================
+// --- WEATHER STATION MANAGER CLASS ---
+// ==========================================
+class Station {
 protected:
     String name;
     int nbr_elements;
@@ -119,12 +137,13 @@ protected:
 public:
     Station(String _name, LiquidCrystal_I2C* lcd_instance)
         : name(_name), nbr_elements(0), lcd(lcd_instance) {
-        for (int i = 0; i < 4; i++){
+        for (int i = 0; i < 4; i++) {
             sensors[i] = nullptr;
         }
     }
-    bool add_sensor(Sensor* sensor_instance){
-        if (nbr_elements < 4){
+
+    bool add_sensor(Sensor* sensor_instance) {
+        if (nbr_elements < 4) {
             sensors[nbr_elements] = sensor_instance;
             nbr_elements++;
             return true;
@@ -132,51 +151,58 @@ public:
         return false;
     }
 
-    void update_all(){
-        for (int i = 0; i < nbr_elements; i++){
+    // Trigger readings on all attached sensors
+    void update_all() {
+        for (int i = 0; i < nbr_elements; i++) {
             if (sensors[i] != nullptr) {
                 sensors[i]->add_measurement();
             }
         }
     }
-    void display(){
-        for (int i = 0; i < nbr_elements; i++){
+
+    // Print values to Serial and update the LCD display
+    void display() {
+        for (int i = 0; i < nbr_elements; i++) {
             if (sensors[i] != nullptr) {
                 Serial.print(sensors[i]->get_value());
                 Serial.print(" ");
                 Serial.println(sensors[i]->get_unit());
             }
         }
+
         if (lcd != nullptr && nbr_elements >= 4) {
-                if (sensors[0] != nullptr && sensors[1] != nullptr &&
-                    sensors[2] != nullptr && sensors[3] != nullptr) {
+            if (sensors[0] != nullptr && sensors[1] != nullptr &&
+                sensors[2] != nullptr && sensors[3] != nullptr) {
 
-                    lcd->clear();
+                lcd->clear();
 
-                    lcd->setCursor(0, 0);
-                    lcd->print("L:");
-                    lcd->print((int)sensors[1]->get_value());
-                    lcd->print("% ");
+                // Row 0: Luminosity and Temperature
+                lcd->setCursor(0, 0);
+                lcd->print("L:");
+                lcd->print((int)sensors[1]->get_value());
+                lcd->print("% ");
 
-                    lcd->setCursor(8, 0);
-                    lcd->print("T:");
-                    lcd->print(sensors[0]->get_value(), 1);
-                    lcd->print("C");
+                lcd->setCursor(8, 0);
+                lcd->print("T:");
+                lcd->print(sensors[0]->get_value(), 1);
+                lcd->print("C");
 
-                    lcd->setCursor(0, 1);
-                    lcd->print("H:");
-                    lcd->print((int)sensors[2]->get_value());
-                    lcd->print("% ");
+                // Row 1: Humidity and Pressure
+                lcd->setCursor(0, 1);
+                lcd->print("H:");
+                lcd->print((int)sensors[2]->get_value());
+                lcd->print("% ");
 
-                    lcd->setCursor(8, 1);
-                    lcd->print("P:");
-                    lcd->print((int)sensors[3]->get_value());
-                    lcd->print("hPa");
-                }
+                lcd->setCursor(8, 1);
+                lcd->print("P:");
+                lcd->print((int)sensors[3]->get_value());
+                lcd->print("hPa");
+            }
         }
     }
 
-    String to_json(){
+    // Export current measurements as a JSON string
+    String to_json() {
         String json = "{";
 
         if (nbr_elements >= 4) {
@@ -184,7 +210,7 @@ public:
                 json += "\"temp\":" + String(sensors[0]->get_value(), 1) + ",";
                 json += "\"lum\":" + String(sensors[1]->get_value(), 0) + ",";
                 json += "\"hum\":" + String(sensors[2]->get_value(), 0) + ",";
-                json += "\"press\":" + String (sensors[3]->get_value(), 1);
+                json += "\"press\":" + String(sensors[3]->get_value(), 1);
             }
         }
         json += "}";
@@ -192,8 +218,10 @@ public:
     }
 };
 
+// Global station pointer
 Station* maStation = nullptr;
 
+// --- WEB DASHBOARD (HTML/JS) STORED IN FLASH MEMORY ---
 const char HTML_INDEX[] PROGMEM = R"rawliteral(
 <!DOCTYPE html>
 <html lang="fr">
@@ -236,60 +264,109 @@ const char HTML_INDEX[] PROGMEM = R"rawliteral(
 </html>
 )rawliteral";
 
-void init_wifi_server(){
+// ==========================================
+// --- WI-FI AND ASYNC WEB SERVER SETUP ---
+// ==========================================
+void init_wifi_server() {
     WiFi.begin(ssid, password);
-    Serial.print("Connexion au Wi-Fi");
+    Serial.print("Connecting to Wi-Fi");
 
     while (WiFi.status() != WL_CONNECTED) {
         delay(500);
         Serial.print(".");
     }
-    Serial.println("\nWi-Fi connecté !");
-    Serial.print("Adresse IP : ");
+    Serial.println("\nWi-Fi connected!");
+    Serial.print("IP Address: ");
     Serial.println(WiFi.localIP());
+
+    // Root route: Serves HTML dashboard
     server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
         request->send_P(200, "text/html", HTML_INDEX);
     });
+
+    // API route: Returns JSON data safely with Mutex
     server.on("/data", HTTP_GET, [](AsyncWebServerRequest *request) {
+        String jsonResponse = "{}";
+
+        // Try to lock the Mutex for 100ms max before reading
+        if (xSemaphoreTake(xStationMutex, pdMS_TO_TICKS(100)) == pdTRUE) {
             if (maStation != nullptr) {
-                request->send(200, "application/json", maStation->to_json());
-            } else {
-                request->send(500, "text/plain", "Station non initialisee");
+                jsonResponse = maStation->to_json();
             }
+            xSemaphoreGive(xStationMutex); // Always release the Mutex
+            request->send(200, "application/json", jsonResponse);
+        } else {
+            // Resource busy response if Mutex is locked by sensor task
+            request->send(503, "text/plain", "Resource busy");
+        }
     });
+
     server.begin();
 }
 
+// ==========================================
+// --- FREERTOS SENSOR TASK (CORE 1) ---
+// ==========================================
+void taskSensors(void *pvParameters) {
+    for (;;) {
+        // Lock Mutex to safely update shared station object
+        if (xSemaphoreTake(xStationMutex, portMAX_DELAY) == pdTRUE) {
+
+            if (maStation != nullptr) {
+                maStation->update_all();
+                maStation->display();
+            }
+
+            xSemaphoreGive(xStationMutex); // Release Mutex
+        }
+
+        // Non-blocking 2-second delay for FreeRTOS scheduler
+        vTaskDelay(pdMS_TO_TICKS(2000));
+    }
+}
+
+// ==========================================
+// --- SETUP & MAIN LOOP ---
+// ==========================================
 void setup() {
+    // Create FreeRTOS Mutex before launching any task
+    xStationMutex = xSemaphoreCreateMutex();
+
     Serial.begin(115200);
     Wire.begin(21, 22);
-    delay(1000);
+    delay(1000); // Short delay to allow Serial port to open
 
+    // Essential checks to prevent hardware crashes
     if (!htu.begin()) {
-        Serial.println("Error: HTU21D not detected!");
+        Serial.println("Error: HTU21D sensor not detected!");
     }
     if (!bmp.begin(0x76)) {
-        Serial.println("Error: BMP280 not detected!");
+        Serial.println("Error: BMP280 sensor not detected!");
     }
 
     lcd.init();
     lcd.backlight();
 
-    // Instanciation de la station et ajout des capteurs
+    // Instantiate Station object and attach sensors
     maStation = new Station("Station_ESP32", &lcd);
     maStation->add_sensor(new Temp_Sensor(35));
     maStation->add_sensor(new Luminosity_Sensor(34));
     maStation->add_sensor(new Humidity_Sensor(&htu));
     maStation->add_sensor(new Pressure_Sensor(&bmp));
 
+    // Start Wi-Fi and Web server (handled by Core 0)
     init_wifi_server();
+
+    // Pin sensor polling task explicitly to Core 1
+    xTaskCreatePinnedToCore(
+        taskSensors,    // Task function
+        "TaskSensors",  // Task name for debugging
+        4096,           // Stack size in bytes
+        NULL,           // Parameters
+        1,              // Priority (1 = low/normal)
+        NULL,           // Task handle
+        1               // Core ID (Core 1)
+    );
 }
 
-void loop() {
-    if (maStation != nullptr) {
-            maStation->update_all();
-            maStation->display();
-    }
-    Serial.println(maStation->to_json());
-    delay(5000);
-}
+void loop()
