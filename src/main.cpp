@@ -4,6 +4,10 @@
 #include <Adafruit_BMP280.h>
 #include <LiquidCrystal_I2C.h>
 
+<<<<<<< Updated upstream
+=======
+// Hardware sensor and display instances
+>>>>>>> Stashed changes
 Adafruit_HTU21DF htu;
 Adafruit_BMP280 bmp;
 LiquidCrystal_I2C lcd(0x27, 16, 2);
@@ -85,6 +89,10 @@ public:
     Sensor(String _id, String _unit, String _sensor_type)
         : id(_id), unit(_unit), sensor_type(_sensor_type), Final_Value(0.0f) {}
 
+<<<<<<< Updated upstream
+=======
+    // Pure virtual function enforcing implementation in all derived sensor classes
+>>>>>>> Stashed changes
     virtual void add_measurement() = 0;
 
     float get_value() const {
@@ -109,6 +117,10 @@ public:
     void add_measurement() override {
         int THR = analogRead(THR_pin);
 
+<<<<<<< Updated upstream
+=======
+        // Safety check to prevent division by zero during open or short circuit conditions
+>>>>>>> Stashed changes
         if (THR == 0 || THR >= 4095) {
             Serial.println("Error reading THR (open circuit or short-circuit)");
             return;
@@ -167,12 +179,104 @@ public:
     }
 };
 
+<<<<<<< Updated upstream
 Station* maStation = nullptr;
 
 void setup() {
     Wire.begin(21, 22);
     Serial.begin(115200);
     delay(1000);
+=======
+// ==========================================
+// --- WEATHER STATION MANAGER CLASS ---
+// ==========================================
+class Station {
+protected:
+    String name;
+    int nbr_elements;
+    Sensor* sensors[4];
+    LiquidCrystal_I2C* lcd;
+
+public:
+    Station(String _name, LiquidCrystal_I2C* lcd_instance)
+        : name(_name), nbr_elements(0), lcd(lcd_instance) {
+        for (int i = 0; i < 4; i++) {
+            sensors[i] = nullptr;
+        }
+    }
+
+    // Attach a new sensor pointer to the array
+    bool add_sensor(Sensor* sensor_instance) {
+        if (nbr_elements < 4) {
+            sensors[nbr_elements] = sensor_instance;
+            nbr_elements++;
+            return true;
+        }
+        return false;
+    }
+
+    // Trigger measurement updates for all registered sensors
+    void update_all() {
+        for (int i = 0; i < nbr_elements; i++) {
+            if (sensors[i] != nullptr) {
+                sensors[i]->add_measurement();
+            }
+        }
+    }
+
+    // Print values to Serial Monitor and format the 1602 LCD layout
+    void display() {
+        for (int i = 0; i < nbr_elements; i++) {
+            if (sensors[i] != nullptr) {
+                Serial.print(sensors[i]->get_value());
+                Serial.print(" ");
+                Serial.println(sensors[i]->get_unit());
+            }
+        }
+
+        if (lcd != nullptr && nbr_elements >= 4) {
+            if (sensors[0] != nullptr && sensors[1] != nullptr &&
+                sensors[2] != nullptr && sensors[3] != nullptr) {
+
+                lcd->clear();
+
+                // Row 0: Luminosity (%) and Temperature (°C)
+                lcd->setCursor(0, 0);
+                lcd->print("L:");
+                lcd->print((int)sensors[1]->get_value());
+                lcd->print("% ");
+
+                lcd->setCursor(8, 0);
+                lcd->print("T:");
+                lcd->print(sensors[0]->get_value(), 1);
+                lcd->print("C");
+
+                // Row 1: Humidity (%) and Pressure (hPa)
+                lcd->setCursor(0, 1);
+                lcd->print("H:");
+                lcd->print((int)sensors[2]->get_value());
+                lcd->print("% ");
+
+                lcd->setCursor(8, 1);
+                lcd->print("P:");
+                lcd->print((int)sensors[3]->get_value());
+                lcd->print("hPa");
+            }
+        }
+    }
+};
+
+// Global Station pointer
+Station* maStation = nullptr;
+
+// ==========================================
+// --- SETUP & MAIN LOOP ---
+// ==========================================
+void setup() {
+    Wire.begin(21, 22);
+    Serial.begin(115200);
+    delay(1000); // Short delay to allow Serial port stabilization
+>>>>>>> Stashed changes
 
     if (!htu.begin()) {
         Serial.println("Error: HTU21D not detected!");
@@ -194,9 +298,17 @@ void setup() {
 
 void loop() {
     if (maStation != nullptr) {
+<<<<<<< Updated upstream
             maStation->update_all();
             maStation->display();
         }
 
         delay(5000);
+=======
+        maStation->update_all();
+        maStation->display();
+    }
+
+    delay(5000);
+>>>>>>> Stashed changes
 }
